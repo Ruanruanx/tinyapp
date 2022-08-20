@@ -28,6 +28,13 @@ app.post("/urls", (req, res) => {
   res.redirect("http://localhost:8080/urls/"+shortUrl); // Respond with 'Ok' (we will replace this)
 });
 
+//delete button
+app.post("/urls/:id/delete",(req,res)=>{
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls")
+})
+
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
