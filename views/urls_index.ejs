@@ -31,6 +31,14 @@
               <td>
                 <%= urls[id] %>
               </td>
+              <form action="/urls/:id/delete" method="POST">
+                <div class="form-group mb-2">
+                <td>
+                  <button type="button" class="btn btn-primary">Delete</button>
+                </td>
+                </div>
+              </form>
+            
             </tr>
             <% } %>
         </tbody>
