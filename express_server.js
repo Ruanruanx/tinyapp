@@ -4,12 +4,13 @@ const PORT = 8080;
 function generateRandomString() {
   let result = '';
   const charaters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for(let i =0; i<6; i++){
-    let index = Math.floor(Math.random()*charaters.length);
-    result+=charaters[index];
+  for (let i = 0; i < 6; i++) {
+    let index = Math.floor(Math.random() * charaters.length);
+    result += charaters[index];
   }
   return result;
 }
+
 app.set("view engine", 'ejs');
 
 const urlDatabase = {
@@ -21,7 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  //save  urlDatabase to id-longURL key-value pair 
+  let shortUrl = generateRandomString();
+  urlDatabase[shortUrl] = req.body.longURL;
+  res.send(urlDatabase); // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/", (req, res) => {
