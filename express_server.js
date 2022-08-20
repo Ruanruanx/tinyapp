@@ -25,7 +25,12 @@ app.post("/urls", (req, res) => {
   //save  urlDatabase to id-longURL key-value pair 
   let shortUrl = generateRandomString();
   urlDatabase[shortUrl] = req.body.longURL;
-  res.send(urlDatabase); // Respond with 'Ok' (we will replace this)
+  res.redirect("http://localhost:8080/urls/"+shortUrl); // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.get("/", (req, res) => {
