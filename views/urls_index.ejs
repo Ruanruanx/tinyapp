@@ -35,17 +35,17 @@
                 <div class="form-group mb-2">
                 <td>
                   <button type="submit" class="btn btn-primary">Delete</button>
-                
                 </div>
               </form>
-              <form action="/urls/<%=id %>" method="POST">
-                <div class="form-group mb-2">
-                <td>
-                  <button type="submit" class="btn btn-primary">Edit</button>
-                
-                </div>
-              </form>
+
+              <td>
+              <a href="/urls/<%=id %>">
+                <!-- <div class="form-group mb-2"> -->
+               
+                  <button type = "button" class="btn btn-primary">Edit</button>               
+                <!-- </div> -->
             </td>
+          </a>
             </tr>
             <% } %>
         </tbody>

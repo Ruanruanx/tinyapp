@@ -20,14 +20,6 @@ const urlDatabase = {
 
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  //save  urlDatabase to id-longURL key-value pair 
-  let shortUrl = generateRandomString();
-  urlDatabase[shortUrl] = req.body.longURL;
-  res.redirect("http://localhost:8080/urls/"+shortUrl); // Respond with 'Ok' (we will replace this)
-});
-
 //delete button
 app.post("/urls/:id/delete",(req,res)=>{
   const id = req.params.id;
@@ -38,13 +30,21 @@ app.post("/urls/:id/delete",(req,res)=>{
 
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = req.body;
-  res.redirect("/urls/:id");
+  const longURL = req.body.longURL;
+  urlDatabase[id] = longURL;
+
+  res.redirect(`/urls/${id}`);
 });
 
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  //save  urlDatabase to id-longURL key-value pair 
+  let shortUrl = generateRandomString();
+  urlDatabase[shortUrl] = req.body.longURL;
+  res.redirect("http://localhost:8080/urls/"+shortUrl); // Respond with 'Ok' (we will replace this)
+});
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
 
@@ -66,10 +66,7 @@ app.get("/set", (req, res) => {
   res.send(`a = ${a}`);
 });
 
-app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
-});
+
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
@@ -82,6 +79,10 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
