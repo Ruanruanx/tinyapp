@@ -1,5 +1,7 @@
 const express = require("express");
+var cookieParser = require('cookie-parser');
 const app = express();
+app.use(cookieParser());
 const PORT = 8080;
 function generateRandomString() {
   let result = '';
@@ -20,13 +22,23 @@ const urlDatabase = {
 
 app.use(express.urlencoded({ extended: true }));
 
+app.post("/login", (req, res) => {
+  const username = req.body.username;
+  res.cookie('username', username);
+  res.redirect("/urls")
+})
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("username")
+  res.redirect("/urls")
+})
+
 //delete button
-app.post("/urls/:id/delete",(req,res)=>{
+app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
   res.redirect("/urls")
 })
-
 
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
@@ -41,7 +53,7 @@ app.post("/urls", (req, res) => {
   //save  urlDatabase to id-longURL key-value pair 
   let shortUrl = generateRandomString();
   urlDatabase[shortUrl] = req.body.longURL;
-  res.redirect("http://localhost:8080/urls/"+shortUrl); // Respond with 'Ok' (we will replace this)
+  res.redirect("http://localhost:8080/urls/" + shortUrl); // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/u/:id", (req, res) => {
@@ -66,21 +78,23 @@ app.get("/set", (req, res) => {
   res.send(`a = ${a}`);
 });
 
-
-
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = urlDatabase[id];
-  const templateVars = { id, longURL };
+  const templateVars = { id, longURL, username: req.cookies["username"] };
   res.render("urls_show", templateVars);
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
   res.render("urls_index", templateVars);
 });
 

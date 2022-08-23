@@ -31,13 +31,7 @@
               <td>
                 <%= urls[id] %>
               </td>
-              <form action="/urls/<%=id%>/delete" method="POST">
-                <div class="form-group mb-2">
-                <td>
-                  <button type="submit" class="btn btn-primary">Delete</button>
-                </div>
-              </form>
-
+            
               <td>
               <a href="/urls/<%=id %>">
                 <!-- <div class="form-group mb-2"> -->
@@ -46,6 +40,12 @@
                 <!-- </div> -->
             </td>
           </a>
+          <form action="/urls/<%=id%>/delete" method="POST">
+            <div class="form-group mb-2">
+            <td>
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </div>
+          </form>
             </tr>
             <% } %>
         </tbody>
