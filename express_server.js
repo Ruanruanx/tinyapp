@@ -56,6 +56,11 @@ app.post("/urls", (req, res) => {
   res.redirect("http://localhost:8080/urls/" + shortUrl); // Respond with 'Ok' (we will replace this)
 });
 
+app.get("/register",(req,res)=>{
+  const templateVars = { username: req.cookies["username"] };
+  res.render("register",templateVars)
+})
+
 app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
