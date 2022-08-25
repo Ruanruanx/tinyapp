@@ -83,9 +83,22 @@ app.get("/login",(req,res)=>{
 })
 
 app.post("/login", (req, res) => {
-  const userId = req.cookies.user_id;
-  res.cookie('user_id', userId);
-  res.redirect("/urls")
+  //retrieve input email and password
+  const{email,password} =req.body;
+
+  //check if email exists in users database
+  const user = getUserByEmail(email);
+  if(!user) return res.status(403).send('The email provided does not exist')
+
+  //validate password match
+  if(user.password === password){
+    //return cookie if password is right
+    res.cookie('user_id', user.id);
+    res.redirect("/urls")
+  } else {
+    return res.status(403).send('The password is incorrect')
+  }
+//  const userId = req.cookies.user_id;
 })
 
 app.post("/logout", (req, res) => {
