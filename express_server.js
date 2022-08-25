@@ -3,24 +3,55 @@ var cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
 const PORT = 8080;
-function generateRandomString() {
+function generateRandomString(n) {
   let result = '';
   const charaters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < n; i++) {
     let index = Math.floor(Math.random() * charaters.length);
     result += charaters[index];
   }
   return result;
 }
 
-app.set("view engine", 'ejs');
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  563: {
+    id: "563",
+    email: "user1@example.com",
+    password: "purple",
+  },
+  596: {
+    id: "596",
+    email: "user2@example.com",
+    password: "funk",
+  },
+};
+
+app.set("view engine", 'ejs');
+
+
 app.use(express.urlencoded({ extended: true }));
+
+app.post('/register',(req,res)=>{
+  let id = generateRandomString(3);
+  //read the name, email and password
+  const {email, password} = req.body;
+  //add new user
+  const newUser = {
+    id,
+    email,
+    password,
+  }
+  users[id]=newUser;
+  //respond back to the client with a cookie
+  res.cookie("user_id", id)
+  res.redirect("/urls")
+})
 
 app.post("/login", (req, res) => {
   const username = req.body.username;
@@ -49,9 +80,10 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  console.log(req.body); 
+  // Log the POST request body to the console
   //save  urlDatabase to id-longURL key-value pair 
-  let shortUrl = generateRandomString();
+  let shortUrl = generateRandomString(6);
   urlDatabase[shortUrl] = req.body.longURL;
   res.redirect("http://localhost:8080/urls/" + shortUrl); // Respond with 'Ok' (we will replace this)
 });
