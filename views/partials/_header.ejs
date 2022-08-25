@@ -18,17 +18,12 @@
               </button>
             </form>
             <% } else {%>
-              <form class="form-inline" action="/login" method="POST">
-                <input class="form-control me-2" placeholder="email" email="email" />
-                <button type="submit" class="btn btn-outline-dark">
-                  Login           
+              <button type="submit" class="btn btn-outline-light">
+                <a href='/login'>Login</a>
                 </button>
-              </form>
-              <form class= "form-inline" action="/register" method="POST">
                 <button type="submit" class="btn btn-outline-light">
                   <a href='/register'>Register</a>
                   </button>
-              </form>
               <%}%>
       </div>
     </div>
