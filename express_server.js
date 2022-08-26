@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 var cookieParser = require('cookie-parser');
 const app = express();
 app.use(cookieParser());
@@ -81,14 +82,18 @@ app.post('/register', (req, res) => {
   //check if the email is empty
   if (!email) return res.status(400).send('Email is empty')
 
+
   //check if the email is taken
   const userExists = getUserByEmail(email);
   if (userExists) return res.status(400).send('Email is already taken')
   //add new user
+
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   const newUser = {
     id,
     email,
-    password,
+    hashedPassword,
   }
   users[id] = newUser;
   //respond back to the client with a cookie
@@ -110,7 +115,8 @@ app.post("/login", (req, res) => {
   if (!user) return res.status(403).send('The email provided does not exist')
 
   //validate password match
-  if (user.password === password) {
+  const verifyPassword = bcrypt.compareSync(password, user.hashedPassword)
+  if (verifyPassword) {
     //return cookie if password is right
     res.cookie('user_id', user.id);
     res.redirect("/urls")
