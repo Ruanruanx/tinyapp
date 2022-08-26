@@ -23,6 +23,10 @@ const urlDatabase = {
     longURL: "https://www.google.ca",
     userID: "596",
   },
+  i3BsGr: {
+    longURL: "https://www.google.caaa",
+    userID: "596",
+  },
 };
 
 const users = {
@@ -48,6 +52,16 @@ const getUserByEmail = (email) => {
     }
   }
   return false;
+}
+
+const urlsForUser = (id) => {
+  let userURL = {};
+  for (let shortUrl in urlDatabase) {
+    if (urlDatabase[shortUrl].userID === id) {
+      userURL[shortUrl] = urlDatabase[shortUrl];
+    }
+  }
+  return userURL;
 }
 
 app.set("view engine", 'ejs');
@@ -115,34 +129,56 @@ app.post("/logout", (req, res) => {
 //delete button
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect("/urls")
+  const userID = req.cookies.user_id;
+  const myURL = urlsForUser(userID);
+  console.log("test:"+userID)
+  console.log(myURL)
+  //if not logged in
+  if (!userID) {
+    res.status(403).send("Login befor delete please!")
+  } else if (!urlDatabase[id]) {
+    //if page doesn't exist
+    res.status(404).send("Don't have this")
+  } else if (myURL[id] && userID === myURL[id].userID) {
+    //if you own the url
+    delete urlDatabase[id];
+    res.redirect("/urls")
+  } else {
+    res.status(403).send("You can't delete this")
+  }
+
 })
 
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[id].longURL = longURL;
+  const userID = req.cookies.user_id;
 
-  res.redirect(`/urls/${id}`);
+  if (id && userID === urlDatabase[id].userID) {
+    urlDatabase[id].longURL = longURL;
+    res.redirect(`/urls/${id}`);
+  } else {
+    res.status(401).send("You can't modify this")
+  }
+
 });
 
 app.post("/urls", (req, res) => {
-  console.log("cookies are" , req.cookies.user_id);
+  console.log("cookies are", req.cookies.user_id);
   // Log the POST request body to the console
   //save  urlDatabase to id-longURL key-value pair 
-  if(req.cookies.user_id){
-  let shortUrl = generateRandomString(6);
-  urlDatabase[shortUrl] ={longURL: req.body.longURL, userID: req.cookies.user_id };
-  res.redirect("http://localhost:8080/urls/" + shortUrl);
-  }else{
-    res.status(403).send("Please login first")
+  if (req.cookies.user_id) {
+    let shortUrl = generateRandomString(6);
+    urlDatabase[shortUrl] = { longURL: req.body.longURL, userID: req.cookies.user_id };
+    res.redirect("http://localhost:8080/urls/" + shortUrl);
+  } else {
+    res.status(403).send("Please login first!")
   }
 });
 
 app.get("/u/:id", (req, res) => {
   let id = req.params.id;
-  if(urlDatabase[id].longURL){
+  if (urlDatabase[id].longURL) {
     res.redirect(urlDatabase[id].longURL);
   } else {
     res.status(403).send("Short url doesn't exist")
@@ -171,7 +207,7 @@ app.get("/urls/new", (req, res) => {
   // const templateVars = { username: req.cookies["username"] };
   const userId = req.cookies.user_id;
   const user = users[userId];
-  const templateVars = {user};
+  const templateVars = { user };
   if (user) {
     res.render("urls_new", templateVars);
   } else {
@@ -182,23 +218,36 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id].longURL;
+  //const longURL = urlDatabase[id].longURL;
   const userId = req.cookies.user_id
   const user = users[userId];
-  const templateVars = { id, longURL, user };
-  res.render("urls_show", templateVars);
+  const myURL = urlsForUser(userId)
+  const templateVars = { id, myURL, user };
+
+  if (!userId) {
+    return res.status(403).send("Please log in first")
+  }
+  //console.log(myURL[id].userID)
+  //if shortURL doesn't exist
+  if (!urlDatabase[id]) {
+    res.status(404).send("Don't have this")
+  } else if (myURL[id] && (userId === myURL[id].userID)) {
+    res.render("urls_show", templateVars);
+  } else {
+    return res.status(401).send("You don't have the access for this page")
+  }
+
 });
 
 app.get("/urls", (req, res) => {
   const userId = req.cookies.user_id
   const user = users[userId]
   const templateVars = {
-    urls: urlDatabase,
-    //username: req.cookies["username"]
+    urls: urlsForUser(userId),
     user
   };
-  if(!userId){
-    res.statusCode=401
+  if (!userId) {
+    res.statusCode = 401
   }
   res.render("urls_index", templateVars);
 
