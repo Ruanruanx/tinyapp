@@ -15,8 +15,14 @@ function generateRandomString(n) {
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "563",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "596",
+  },
 };
 
 const users = {
@@ -116,28 +122,28 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = req.body.longURL;
-  urlDatabase[id] = longURL;
+  urlDatabase[id].longURL = longURL;
 
   res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls", (req, res) => {
-  console.log("cookies are" , req.cookies);
+  console.log("cookies are" , req.cookies.user_id);
   // Log the POST request body to the console
   //save  urlDatabase to id-longURL key-value pair 
-  if(req.cookies.userId){
+  if(req.cookies.user_id){
   let shortUrl = generateRandomString(6);
-  urlDatabase[shortUrl] = req.body.longURL;
+  urlDatabase[shortUrl] ={longURL: req.body.longURL, userID: req.cookies.user_id };
   res.redirect("http://localhost:8080/urls/" + shortUrl);
   }else{
-    return res.status(403).send("Please login first")
+    res.status(403).send("Please login first")
   }
 });
 
 app.get("/u/:id", (req, res) => {
   let id = req.params.id;
-  if(urlDatabase[id]){
-    res.redirect(urlDatabase[id]);
+  if(urlDatabase[id].longURL){
+    res.redirect(urlDatabase[id].longURL);
   } else {
     res.status(403).send("Short url doesn't exist")
   }
@@ -163,9 +169,9 @@ app.get("/set", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // const templateVars = { username: req.cookies["username"] };
-  const userId = req.cookies.user_id
-  const user = users[userId]
-  const templateVars = { user };
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = {user};
   if (user) {
     res.render("urls_new", templateVars);
   } else {
@@ -176,10 +182,9 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id];
+  const longURL = urlDatabase[id].longURL;
   const userId = req.cookies.user_id
   const user = users[userId];
-  // const templateVars = { id, longURL, username: req.cookies["username"] };
   const templateVars = { id, longURL, user };
   res.render("urls_show", templateVars);
 });
