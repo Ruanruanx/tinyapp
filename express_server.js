@@ -1,8 +1,16 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-var cookieParser = require('cookie-parser');
+//const cookieParser = require('cookie-parser');
+//update with cookieSession
+const cookieSession = require("cookie-session")
 const app = express();
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["user_id"],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 const PORT = 8080;
 function generateRandomString(n) {
   let result = '';
@@ -137,7 +145,7 @@ app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   const userID = req.cookies.user_id;
   const myURL = urlsForUser(userID);
-  console.log("test:"+userID)
+  console.log("test:" + userID)
   console.log(myURL)
   //if not logged in
   if (!userID) {
