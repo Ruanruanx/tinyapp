@@ -105,7 +105,7 @@ app.post('/register', (req, res) => {
   }
   users[id] = newUser;
   //respond back to the client with a cookie
-  res.cookie("user_id", id)
+  req.session.user_id = id;
   res.redirect("/urls")
 })
 
@@ -123,27 +123,38 @@ app.post("/login", (req, res) => {
   if (!user) return res.status(403).send('The email provided does not exist')
 
   //validate password match
-  const verifyPassword = bcrypt.compareSync(password, user.hashedPassword)
-  if (verifyPassword) {
-    //return cookie if password is right
-    res.cookie('user_id', user.id);
-    res.redirect("/urls")
-  } else {
-    return res.status(403).send('The password is incorrect')
-  }
+  const verifyPassword = () => {
+    if (user.password === password) {
+      return true
+    } else if (bcrypt.compareSync(password, user.hashedPassword)) {
+      return true;
+    } else {
+      return false;
+    }
+  } 
+
+  if (verifyPassword()) {
+  //return cookie if password is right
+  //res.cookie('user_id', user.id);
+  req.session.user_id = user.id
+  res.redirect("/urls")
+} else {
+  return res.status(403).send('The password is incorrect')
+}
   //  const userId = req.cookies.user_id;
 })
 
 app.post("/logout", (req, res) => {
-  const userId = req.cookies.user_id
-  res.clearCookie("user_id", userId)
+  //const userId = req.cookies.user_id
+  req.session = null;
+  //res.clearCookie("user_id", userId)
   res.redirect("/urls")
 })
 
 //delete button
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  const userID = req.cookies.user_id;
+  const userID = req.session.user_id;
   const myURL = urlsForUser(userID);
   console.log("test:" + userID)
   console.log(myURL)
@@ -166,7 +177,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const longURL = req.body.longURL;
-  const userID = req.cookies.user_id;
+  const userID = req.session.user_id;
 
   if (id && userID === urlDatabase[id].userID) {
     urlDatabase[id].longURL = longURL;
@@ -178,12 +189,11 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log("cookies are", req.cookies.user_id);
   // Log the POST request body to the console
   //save  urlDatabase to id-longURL key-value pair 
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     let shortUrl = generateRandomString(6);
-    urlDatabase[shortUrl] = { longURL: req.body.longURL, userID: req.cookies.user_id };
+    urlDatabase[shortUrl] = { longURL: req.body.longURL, userID: req.session.user_id };
     res.redirect("http://localhost:8080/urls/" + shortUrl);
   } else {
     res.status(403).send("Please login first!")
@@ -219,7 +229,7 @@ app.get("/set", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // const templateVars = { username: req.cookies["username"] };
-  const userId = req.cookies.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = { user };
   if (user) {
@@ -233,7 +243,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   //const longURL = urlDatabase[id].longURL;
-  const userId = req.cookies.user_id
+  const userId = req.session.user_id
   const user = users[userId];
   const myURL = urlsForUser(userId)
   const templateVars = { id, myURL, user };
@@ -254,14 +264,14 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies.user_id
+  const userId = req.session.user_id
   const user = users[userId]
   const templateVars = {
     urls: urlsForUser(userId),
     user
   };
   if (!userId) {
-    res.statusCode = 401
+    res.statusCode = 403;
   }
   res.render("urls_index", templateVars);
 
