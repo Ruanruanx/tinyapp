@@ -21,6 +21,7 @@ function generateRandomString(n) {
   return result;
 }
 
+const getUserByEmail = require('./helpers')
 
 const urlDatabase = {
   b6UTxQ: {
@@ -50,18 +51,6 @@ const users = {
   },
 };
 
-const getUserByEmail = (email) => {
-  for (const key in users) {
-    if (Object.hasOwnProperty.call(users, key)) {
-      const user = users[key];
-      if (user.email === email) {
-        return user;
-      }
-    }
-  }
-  return false;
-}
-
 const urlsForUser = (id) => {
   let userURL = {};
   for (let shortUrl in urlDatabase) {
@@ -90,7 +79,7 @@ app.post('/register', (req, res) => {
 
 
   //check if the email is taken
-  const userExists = getUserByEmail(email);
+  const userExists = getUserByEmail(email, users);
   if (userExists) return res.status(400).send('Email is already taken')
   //add new user
 
@@ -117,7 +106,7 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   //check if email exists in users database
-  const user = getUserByEmail(email);
+  const user = getUserByEmail(email,users);
   if (!user) return res.status(403).send('The email provided does not exist')
 
   //validate password match
@@ -149,8 +138,6 @@ app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   const userID = req.session.user_id;
   const myURL = urlsForUser(userID);
-  console.log("test:" + userID)
-  console.log(myURL)
   //if not logged in
   if (!userID) {
     res.status(403).send("Login befor delete please!")
