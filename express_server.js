@@ -11,17 +11,8 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }))
 const PORT = 8080;
-function generateRandomString(n) {
-  let result = '';
-  const charaters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < n; i++) {
-    let index = Math.floor(Math.random() * charaters.length);
-    result += charaters[index];
-  }
-  return result;
-}
 
-const getUserByEmail = require('./helpers')
+const {getUserByEmail, generateRandomString, urlsForUser, verifyPassword} = require('./helpers')
 
 const urlDatabase = {
   b6UTxQ: {
@@ -50,16 +41,6 @@ const users = {
     password: "funk",
   },
 };
-
-const urlsForUser = (id) => {
-  let userURL = {};
-  for (let shortUrl in urlDatabase) {
-    if (urlDatabase[shortUrl].userID === id) {
-      userURL[shortUrl] = urlDatabase[shortUrl];
-    }
-  }
-  return userURL;
-}
 
 app.set("view engine", 'ejs');
 
@@ -106,21 +87,13 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   //check if email exists in users database
-  const user = getUserByEmail(email,users);
+  const user = getUserByEmail(email, users);
   if (!user) return res.status(403).send('The email provided does not exist')
 
   //validate password match
-  const verifyPassword = () => {
-    if (user.password === password) {
-      return true
-    } else if (bcrypt.compareSync(password, user.hashedPassword)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
-  if (verifyPassword()) {
+
+  if (verifyPassword(user, password)) {
     req.session.user_id = user.id
     res.redirect("/urls")
   } else {
@@ -137,7 +110,7 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   const userID = req.session.user_id;
-  const myURL = urlsForUser(userID);
+  const myURL = urlsForUser(userID,urlDatabase);
   //if not logged in
   if (!userID) {
     res.status(403).send("Login befor delete please!")
@@ -190,17 +163,20 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  //check if cookie exists
+  const userId = req.session.user_id
+  //redirect to /urls if logged in
+  if (userId) {
+    res.redirect('/urls')
+  } else {
+    //if not logged in, redirect to /login
+    res.redirect('/login')
+  }
 });
 //Add routes
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 })
-
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
-});
 
 app.get("/urls/new", (req, res) => {
   const userId = req.session.user_id;
@@ -218,7 +194,7 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const userId = req.session.user_id
   const user = users[userId];
-  const myURL = urlsForUser(userId)
+  const myURL = urlsForUser(userId, urlDatabase)
   const templateVars = { id, myURL, user };
 
   if (!userId) {
@@ -239,7 +215,7 @@ app.get("/urls", (req, res) => {
   const userId = req.session.user_id
   const user = users[userId]
   const templateVars = {
-    urls: urlsForUser(userId),
+    urls: urlsForUser(userId,urlDatabase),
     user
   };
   if (!userId) {
