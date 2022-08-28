@@ -12,7 +12,7 @@ app.use(cookieSession({
 }))
 const PORT = 8080;
 
-const {getUserByEmail, generateRandomString, urlsForUser, verifyPassword} = require('./helpers')
+const { getUserByEmail, generateRandomString, urlsForUser, verifyPassword } = require('./helpers')
 
 const urlDatabase = {
   b6UTxQ: {
@@ -110,7 +110,7 @@ app.post("/logout", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   const userID = req.session.user_id;
-  const myURL = urlsForUser(userID,urlDatabase);
+  const myURL = urlsForUser(userID, urlDatabase);
   //if not logged in
   if (!userID) {
     res.status(403).send("Login befor delete please!")
@@ -215,7 +215,7 @@ app.get("/urls", (req, res) => {
   const userId = req.session.user_id
   const user = users[userId]
   const templateVars = {
-    urls: urlsForUser(userId,urlDatabase),
+    urls: urlsForUser(userId, urlDatabase),
     user
   };
   if (!userId) {

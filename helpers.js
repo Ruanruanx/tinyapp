@@ -40,4 +40,4 @@ const verifyPassword = (user, password) => {
   }
 }
 
-module.exports = {getUserByEmail, generateRandomString, urlsForUser, verifyPassword}
+module.exports = { getUserByEmail, generateRandomString, urlsForUser, verifyPassword }
