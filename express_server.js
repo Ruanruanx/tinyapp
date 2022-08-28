@@ -77,82 +77,8 @@ app.post('/register', (req, res) => {
   res.redirect("/urls")
 })
 
-app.get("/login", (req, res) => {
-  const templateVars = { user: null };
-  res.render("login", templateVars)
-})
-
-app.post("/login", (req, res) => {
-  //retrieve input email and password
-  const { email, password } = req.body;
-
-  //check if email exists in users database
-  const user = getUserByEmail(email, users);
-  if (!user) return res.status(403).send('The email provided does not exist')
-
-  //validate password match
-
-
-  if (verifyPassword(user, password)) {
-    req.session.user_id = user.id
-    res.redirect("/urls")
-  } else {
-    return res.status(403).send('The password is incorrect')
-  }
-})
-
-app.post("/logout", (req, res) => {
-  req.session = null;
-  res.redirect("/urls")
-})
-
-//delete button
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  const userID = req.session.user_id;
-  const myURL = urlsForUser(userID, urlDatabase);
-  //if not logged in
-  if (!userID) {
-    res.status(403).send("Login befor delete please!")
-  } else if (!urlDatabase[id]) {
-    //if page doesn't exist
-    res.status(404).send("Don't have this")
-  } else if (myURL[id] && userID === myURL[id].userID) {
-    //if you own the url
-    delete urlDatabase[id];
-    res.redirect("/urls")
-  } else {
-    res.status(403).send("You can't delete this")
-  }
-
-})
-
-app.post("/urls/:id", (req, res) => {
-  const id = req.params.id;
-  const longURL = req.body.longURL;
-  const userID = req.session.user_id;
-
-  if (id && userID === urlDatabase[id].userID) {
-    urlDatabase[id].longURL = longURL;
-    res.redirect(`/urls/${id}`);
-  } else {
-    res.status(401).send("You can't modify this")
-  }
-
-});
-
-app.post("/urls", (req, res) => {
-  // Log the POST request body to the console
-  //save  urlDatabase to id-longURL key-value pair 
-  if (req.session.user_id) {
-    let shortUrl = generateRandomString(6);
-    urlDatabase[shortUrl] = { longURL: req.body.longURL, userID: req.session.user_id };
-    res.redirect("http://localhost:8080/urls/" + shortUrl);
-  } else {
-    res.status(403).send("Please login first!")
-  }
-});
-
+//GETs
+//redirect to the corresponding long url
 app.get("/u/:id", (req, res) => {
   let id = req.params.id;
   if (urlDatabase[id].longURL) {
@@ -178,6 +104,7 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 })
 
+//create new short urls
 app.get("/urls/new", (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
@@ -190,6 +117,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+//direct to selected url page to edit
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const userId = req.session.user_id
@@ -211,6 +139,7 @@ app.get("/urls/:id", (req, res) => {
 
 });
 
+//the first page to show, including all urls and edit, delete button
 app.get("/urls", (req, res) => {
   const userId = req.session.user_id
   const user = users[userId]
@@ -224,6 +153,82 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 
 });
+
+//to login
+app.get("/login", (req, res) => {
+  const templateVars = { user: null };
+  res.render("login", templateVars)
+})
+
+app.post("/login", (req, res) => {
+  //retrieve input email and password
+  const { email, password } = req.body;
+
+  //check if email exists in users database
+  const user = getUserByEmail(email, users);
+  if (!user) return res.status(403).send('The email provided does not exist')
+
+  //validate password match
+  if (verifyPassword(user, password)) {
+    req.session.user_id = user.id
+    res.redirect("/urls")
+  } else {
+    return res.status(403).send('The password is incorrect')
+  }
+})
+
+//delete cookie if log out
+app.post("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/urls")
+})
+
+//delete selected url
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  const userID = req.session.user_id;
+  const myURL = urlsForUser(userID, urlDatabase);
+  //if not logged in
+  if (!userID) {
+    res.status(403).send("Login befor delete please!")
+  } else if (!urlDatabase[id]) {
+    //if page doesn't exist
+    res.status(404).send("Don't have this")
+  } else if (myURL[id] && userID === myURL[id].userID) {
+    //if you own the url
+    delete urlDatabase[id];
+    res.redirect("/urls")
+  } else {
+    res.status(403).send("You can't delete this")
+  }
+})
+
+//Allow user to edit the existed long url
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const longURL = req.body.longURL;
+  const userID = req.session.user_id;
+
+  if (id && userID === urlDatabase[id].userID) {
+    urlDatabase[id].longURL = longURL;
+    res.redirect(`/urls/${id}`);
+  } else {
+    res.status(401).send("You can't modify this")
+  }
+
+});
+
+  //save  urlDatabase to shorturlId-longURL key-value pair 
+app.post("/urls", (req, res) => {
+  if (req.session.user_id) {
+    let shortUrl = generateRandomString(6);
+    urlDatabase[shortUrl] = { longURL: req.body.longURL, userID: req.session.user_id };
+    res.redirect("http://localhost:8080/urls/" + shortUrl);
+  } else {
+    res.status(403).send("Please login first!")
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
