@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs");
 const getUserByEmail = (email, users) => {
   for (const key in users) {
     if (Object.hasOwnProperty.call(users, key)) {
@@ -33,7 +34,7 @@ const urlsForUser = (id, urlDatabase) => {
 const verifyPassword = (user, password) => {
   if (user.password === password) {
     return true
-  } else if (bcrypt.compareSync(password, user.hashedPassword)) {
+  } else if (bcrypt.compareSync(password, user.password)) {
     return true;
   } else {
     return false;
